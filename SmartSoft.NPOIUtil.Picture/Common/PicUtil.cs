@@ -4,6 +4,7 @@ using SmartSoft.NPOIUtil.Picture.Exceptions;
 using SmartSoft.NPOIUtil.Picture.Interface;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Text;
 
@@ -12,17 +13,17 @@ namespace SmartSoft.NPOIUtil.Picture.Common
     public class PicUtil : IPicUtil
     {
         #region initialize
-        public const string prefix = "菜鸡你咋又出错了，还是怎么低级的错误：";
+        public const string prefix = "菜鸡你咋又出错了，还是怎么低级的错误： ";
         #endregion
 
         #region Drawing
         /// <summary>
         /// Drawing
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="sheetname"></param>
-        /// <param name="picPath"></param>
-        /// <param name="format"></param>
+        /// <param name="filePath">文件路径</param>
+        /// <param name="sheetname">Sheet名</param>
+        /// <param name="picPath">图片路径</param>
+        /// <param name="format">图片格式</param>
         /// <param name="dx1"></param>
         /// <param name="dy1"></param>
         /// <param name="dx2"></param>
@@ -75,6 +76,62 @@ namespace SmartSoft.NPOIUtil.Picture.Common
             {
 
                 throw new PictureException ($"{prefix}{ex.Message}");
+            }
+        }
+        #endregion
+
+        #region Drawding
+        /// <summary>
+        /// Drawing
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="sheetname"></param>
+        /// <param name="picPath"></param>
+        /// <param name="format"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="scale"></param>
+        /// <exception cref="PictureException"></exception>
+        public void Drawing(string filePath, string sheetname, string picPath, PictureType format, int x, int y, double scale = 1.0)
+        {
+            try
+            {
+                FileStream fs = new FileStream(filePath, FileMode.Open);
+
+                XSSFWorkbook xssfworkbook = new XSSFWorkbook(fs);
+
+                XSSFSheet sheet = (XSSFSheet)xssfworkbook.GetSheet(sheetname ?? xssfworkbook.GetSheetName(0));
+
+
+                byte[] bytes = File.ReadAllBytes(picPath);
+
+                MemoryStream ms = new MemoryStream(bytes);
+                Image Img = Bitmap.FromStream(ms, true);
+
+                int pictureIdx = xssfworkbook.AddPicture(bytes, format);
+
+                XSSFDrawing patriarch = (XSSFDrawing)sheet.CreateDrawingPatriarch();
+
+                XSSFClientAnchor anchor = new XSSFClientAnchor(0, 0, 0, 0, x, y, x, y);
+
+                XSSFPicture pict = (XSSFPicture)patriarch.CreatePicture(anchor, pictureIdx);
+
+                pict.Resize(scale ,scale * Img.Height / Img.Width );
+
+                FileStream file = new FileStream(filePath, FileMode.Create);
+
+                xssfworkbook.Write(file);
+
+                xssfworkbook.Close();
+                fs.Close();
+                fs.Dispose();
+                file.Close();
+                file.Dispose();
+            }
+            catch (Exception ex)
+            {
+
+                throw new PictureException($"{prefix}{ex.Message}");
             }
         }
         #endregion
