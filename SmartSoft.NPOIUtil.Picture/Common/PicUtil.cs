@@ -13,7 +13,7 @@ namespace SmartSoft.NPOIUtil.Picture.Common
     public class PicUtil : IPicUtil
     {
         #region initialize
-        public const string prefix = "菜鸡你咋又出错了，还是怎么低级的错误： ";
+        public const string prefix = "糟糕，出错了： ";
         #endregion
 
         #region Drawing
@@ -92,7 +92,7 @@ namespace SmartSoft.NPOIUtil.Picture.Common
         /// <param name="y"></param>
         /// <param name="scale"></param>
         /// <exception cref="PictureException"></exception>
-        public void Drawing(string filePath, string sheetname, string picPath, PictureType format, int x, int y, double scale = 1.0)
+        public void Drawing(string filePath, string sheetname, string picPath, PictureType format, int x, int y, double scale = 1.0, int yOffset = 0)
         {
             try
             {
@@ -105,18 +105,27 @@ namespace SmartSoft.NPOIUtil.Picture.Common
 
                 byte[] bytes = File.ReadAllBytes(picPath);
 
-                MemoryStream ms = new MemoryStream(bytes);
-                Image Img = Bitmap.FromStream(ms, true);
+                //MemoryStream ms = new MemoryStream(bytes);
+                //Image Img = Bitmap.FromStream(ms, true);
 
                 int pictureIdx = xssfworkbook.AddPicture(bytes, format);
 
                 XSSFDrawing patriarch = (XSSFDrawing)sheet.CreateDrawingPatriarch();
 
-                XSSFClientAnchor anchor = new XSSFClientAnchor(0, 0, 0, 0, x, y, x, y);
+                XSSFClientAnchor anchor = new XSSFClientAnchor(0, 0, 0, 0, x, y, x, y + yOffset);
 
                 XSSFPicture pict = (XSSFPicture)patriarch.CreatePicture(anchor, pictureIdx);
 
-                pict.Resize(scale ,scale * Img.Height / Img.Width );
+                //IRow row = sheet.CreateRow(x);
+
+                //ICell cell = row.CreateCell(y);
+
+                //var cellwidth = sheet.GetColumnWidthInPixels(cell.ColumnIndex);
+                //var cellheight = cell.Sheet.GetRow(cell.RowIndex).HeightInPoints / 72 * 96;
+
+                //scale = Fixed ? scale /cellwidth : scale;
+
+                pict.Resize(scale, 1);
 
                 FileStream file = new FileStream(filePath, FileMode.Create);
 
